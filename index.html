@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cálculo de Impostos</title>
+  <link rel="stylesheet" type="text/css" href="estilo.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Selecione o Cliente</h1>
+    <div class="clientes" id="clientes"></div>
+
+    <div class="formulario" id="formulario" style="display: none;">
+      <h2 id="tituloCliente"></h2>
+      <label>Valor da Venda: R$
+        <input type="text" id="valorVenda" placeholder="Ex: 42.500,00">
+      </label>
+      <button onclick="calcularImpostos()">Calcular</button>
+      <button onclick="limparCampos()">Limpar</button>
+      <div id="resultados"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ---------- LISTA DE CLIENTES E IMPOSTOS ----------
+    const clientes = [
+      "BASA", "CAESB", "CEF STE CEAUS", "CRA BA", "DNOCS", "EBSERH", "IEC",
+      "IGEPREV", "INFRAERO", "ITI", "JFCE", "NAV", "PROINFO", "SEDEC RJ",
+      "SEFAZ", "SEMAS", "TJPA", "TRT-PI", "TRT-SP", "TSE"
+    ];
+
+    const impostosPorCliente = {
+      "BASA":     { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "CAESB":    { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.015, CSLL: 0.01 },
+      "CEF STE CEAUS": { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "CRA BA":   { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "DNOCS":    { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.01, CSLL: 0.01 },
+      "EBSERH":   { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "IEC":      { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "IGEPREV":  { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.01, CSLL: 0.01 },
+      "INFRAERO": { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "ITI":      { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "JFCE":     { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "NAV":      { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "PROINFO":  { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "SEDEC RJ": { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 },
+      "SEFAZ":    { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "SEMAS":    { PIS: 0.0065, COFINS: 0.03, IRRF: 0.01, CSLL: 0.01 },
+      "TJPA":     { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "TRT-PI":   { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "TRT-SP":   { PIS: 0.0065, COFINS: 0.03, INSS: 0.11, IRRF: 0.048, CSLL: 0.01 },
+      "TSE":      { PIS: 0.0065, COFINS: 0.03, IRRF: 0.048, CSLL: 0.01 }
+    };
+
+
+    // ---------- VARIÁVEIS GLOBAIS ----------
+    const clientesDiv = document.getElementById("clientes");
+    const formDiv = document.getElementById("formulario");
+    const titulo = document.getElementById("tituloCliente");
+    let clienteSelecionado = null;
+
+    // ---------- FUNÇÕES PRINCIPAIS ----------
+    // Cria os botões dos clientes
+    clientes.forEach(nome => {
+      const div = document.createElement("div");
+      div.className = "cliente";
+      div.textContent = nome;
+      div.onclick = () => abrirFormulario(nome);
+      clientesDiv.appendChild(div);
+    });
+
+    // Abre o formulário do cliente selecionado
+    function abrirFormulario(cliente) {
+      clienteSelecionado = cliente;
+      titulo.innerText = `Cálculo de Impostos - ${cliente}`;
+      formDiv.style.display = "block";
+      document.getElementById("valorVenda").value = "";
+      document.getElementById("resultados").innerHTML = "";
+      // Remove destaque de todos e destaca o selecionado
+      document.querySelectorAll('.cliente').forEach(c => c.classList.remove('ativo'));
+      Array.from(clientesDiv.children).find(div => div.textContent === cliente).classList.add('ativo');
+    }
+
+    // Converte valores no formato brasileiro para número
+    function tratarValorBrasileiro(valor) {
+      valor = valor.replace(/\./g, '');     // Remove todos os pontos (milhar)
+      valor = valor.replace(',', '.');       // Troca vírgula decimal por ponto
+      valor = valor.replace(/[^0-9.]/g, ''); // Remove qualquer caractere que não seja número ou ponto
+      return valor;
+    }
+
+
+    // Calcula os impostos
+    function calcularImpostos() {
+      const valorStr = document.getElementById("valorVenda").value.trim();
+      const valorTratado = tratarValorBrasileiro(valorStr);
+      const valor = parseFloat(valorTratado);
+
+      // Validação
+      if (isNaN(valor) || valor <= 0) {
+        mostrarToast("Digite um valor válido.", "erro");
+        return;
+      }
+
+      // Busca impostos do cliente
+      const impostos = impostosPorCliente[clienteSelecionado];
+      if (!impostos || Object.keys(impostos).length === 0) {
+        document.getElementById("resultados").innerHTML = `<p class="aviso-impostos">Este cliente não possui impostos definidos ou não vêm descritos na nota.</p>`;
+        return;
+      }
+
+      // Monta os resultados
+      let html = `<h3>Resultados:</h3><ul class="mostrar">`;
+      for (const [nome, aliquota] of Object.entries(impostos)) {
+        const calculado = (valor * aliquota).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        html += `<li>${nome}: R$ ${calculado} <button class="copiar-btn" onclick="copiarTexto('${calculado}')">Copiar</button></li>`;
+      }
+      html += `</ul>`;
+      document.getElementById("resultados").innerHTML = html;
+    }
+
+    // Limpa os campos
+    function limparCampos() {
+      document.getElementById("valorVenda").value = "";
+      document.getElementById("resultados").innerHTML = "";
+    }
+
+    // ---------- FUNÇÕES AUXILIARES ----------
+    // Toast (mensagens rápidas)
+    function mostrarToast(msg, tipo = 'sucesso') {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.className = `toast show ${tipo}`;
+      setTimeout(() => toast.className = "toast", 1500);
+    }
+
+    // Copiar valor
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto);
+      mostrarToast("Copiado!");
+    }
+
+    // Máscara de moeda ao digitar (opcional)
+    document.getElementById("valorVenda").addEventListener('input', function(e) {
+      let valor = this.value.replace(/\D/g, '');
+      valor = (Number(valor) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+      this.value = valor;
+    });
+  </script>
+</body>
+</html>

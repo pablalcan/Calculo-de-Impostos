@@ -1,0 +1,138 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-image: url('imagens/logo30anos.png');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  position: relative;
+}
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 0;
+}
+.container, .clientes, .formulario, #toast {
+  position: relative;
+  z-index: 1;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 40px 60px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.clientes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.cliente {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  width: 120px;
+  cursor: pointer;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background 0.3s;
+}
+.cliente.ativo {
+  background-color: #00b3b6;
+  color: #fff;
+  border-color: #fff;
+}
+
+.formulario {
+  margin-top: 30px;
+}
+
+input {
+  margin-left: 10px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+button {
+  margin-left: 10px;
+  margin-top: 10px;
+  cursor: pointer;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: #00b3b6;
+  color: white;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+button:hover {
+  background-color: #009fa2;
+}
+
+.copiar-btn {
+  margin-left: 10px;
+  padding: 6px 12px;
+  font-size: 0.85em;
+}
+
+.toast {
+  visibility: hidden;
+  min-width: 160px;
+  background-color: #323232;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 12px;
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+}
+.toast.sucesso { background: #00b894; }
+.toast.erro { background: #d63031; }
+
+.aviso-impostos {
+  background: rgba(0,0,0,0.8);
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+#resultados ul {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+#resultados ul.mostrar {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .container {
+    padding: 20px 8px;
+    margin: 12px;
+  }
+  .clientes {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
